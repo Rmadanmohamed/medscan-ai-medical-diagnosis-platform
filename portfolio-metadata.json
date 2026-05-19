@@ -1,0 +1,13 @@
+{
+  "repo": "medscan-ai-medical-diagnosis-platform",
+  "title": "MedScan AI Medical Diagnosis Platform",
+  "category": "Medical-AI-Projects",
+  "description": "A Streamlit-based medical AI prototype with modules for medical image analysis, retinal analysis, and disease-risk prediction.",
+  "topics": [
+    "medical-ai",
+    "streamlit",
+    "tensorflow",
+    "opencv",
+    "healthcare"
+  ]
+}
