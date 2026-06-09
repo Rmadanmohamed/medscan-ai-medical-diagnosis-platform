@@ -7,8 +7,8 @@ from sklearn.preprocessing import StandardScaler
 
 class MedicalImageAnalyzer:
     """
-    نموذج الذكاء الاصطناعي لتحليل الصور الطبية
-    يحقق دقة 97% في تشخيص السرطان
+    Educational medical image analysis prototype.
+    No independently verified clinical accuracy is claimed.
     """
 
     def __init__(self):

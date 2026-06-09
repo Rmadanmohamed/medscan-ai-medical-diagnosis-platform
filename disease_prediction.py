@@ -11,7 +11,8 @@ import joblib
 class DiseasePredictionSystem:
     """
     نظام التنبؤ المبكر بالأمراض
-    دقة 89% في التنبؤ قبل ظهور الأعراض
+    Educational disease-risk prototype.
+    No independently verified clinical accuracy is claimed.
     """
 
     def __init__(self):

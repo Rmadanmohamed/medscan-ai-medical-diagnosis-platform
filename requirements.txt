@@ -1,26 +1,7 @@
-# Core libraries
-numpy
-pandas
-scipy
-scikit-learn
-joblib
-
-# Visualization
-matplotlib
-seaborn
-plotly
-
-# Image processing
-Pillow
-opencv-python
-
-# Web and API
-requests
-python-dotenv
-
-# UI
 streamlit
-streamlit-option-menu
-
-# Deep Learning (commented out due to compatibility issues)
-# tensorflow
+pandas
+numpy
+scikit-learn
+Pillow
+opencv-python-headless
+plotly

@@ -1,59 +1,86 @@
 # MedScan AI Medical Diagnosis Platform
 
 ## Overview
-A Streamlit-based medical AI prototype with modules for medical image analysis, retinal analysis, and disease-risk prediction.
+MedScan AI is a Streamlit portfolio prototype that demonstrates how medical-image, retinal-image, and tabular risk-screening workflows can be organized in one interface.
 
-## Problem Statement
-Medical screening workflows need accessible prototypes that combine image analysis and tabular risk signals in one interface.
+> This project is for educational and portfolio demonstration only. It is not a medical diagnosis tool and should not be used for clinical decisions.
+
+## Problem
+Medical AI projects need clear, reproducible interfaces that separate demo logic from real clinical claims. This repository shows a prototype interface and modular analyzer code, while documenting the current limits honestly.
 
 ## Features
-- Streamlit interactive app
-- Medical image analyzer module
-- Retinal analyzer module
-- Disease-risk prediction module
+- Streamlit multi-page prototype
+- Medical image demo workflow
+- Retinal image demo workflow
+- Tabular risk-screening demo workflow
+- Graceful handling for missing trained models or datasets
+- Clear educational-use disclaimer
 
 ## Tech Stack
 - Python
 - Streamlit
-- TensorFlow
-- OpenCV
+- Pandas
+- NumPy
 - Scikit-learn
+- OpenCV
+- Pillow
 - Plotly
 
-## Dataset
-- No dataset files were bundled outside the source code
+## Live Demo
+Live demo: Not available yet.
 
-## Models / Algorithms
-- CNN-style image models
-- Retinal analysis model
-- Classical ML risk models
+Reason: The safe demo entrypoint has been prepared, but a public Streamlit Community Cloud link has not been created and verified yet.
 
-## Results
-No independently verified final metric was detected in executable source during the portfolio scan.
+## Medical Disclaimer
+This project is for educational and portfolio demonstration only. It is not a medical diagnosis tool and should not be used for clinical decisions. The repository does not include independently verified clinical validation results.
+
+## Models and Data
+- No production-ready trained medical model file is bundled.
+- No clinical dataset is bundled.
+- The safe Streamlit app runs in demo mode and does not claim diagnostic accuracy.
+- Any future model or dataset should include source, license, validation method, and limitations.
+
+## Notebook
+Notebook: Not included in this repository.
+
+## How to Run Locally
+
+```bash
+git clone https://github.com/Rmadanmohamed/medscan-ai-medical-diagnosis-platform.git
+cd medscan-ai-medical-diagnosis-platform
+python -m venv .venv
+pip install -r requirements.txt
+streamlit run app.py
+```
 
 ## Project Structure
-- ai_medscan_app.py
-- disease_prediction.py
-- install.py
-- medical_image_analyzer.py
-- MRI-VS-x-RAY-head-and-brain-1296x728-slide2.jpg
-- project_documentation.html
-- project_documentation.md
-- README.md
-- requirements.txt
-- retinal_analyzer.py
 
-## How to Run
-- `pip install -r requirements.txt`
-- `streamlit run ai_medscan_app.py`
+```text
+medscan-ai-medical-diagnosis-platform/
+  app.py
+  ai_medscan_app.py
+  disease_prediction.py
+  install.py
+  medical_image_analyzer.py
+  retinal_analyzer.py
+  requirements.txt
+  README.md
+  project_documentation.md
+  project_documentation.html
+```
 
-## Screenshots / Demo
-Screenshots or demo media can be added after deployment.
+## Limitations
+- The app is a portfolio prototype, not a clinical system.
+- Outputs are demonstration signals unless a validated trained model and dataset are added.
+- Accuracy, cost-saving, or clinical-performance claims should not be made without reproducible validation.
+- Deployment may require dependency tuning because OpenCV and Streamlit can be sensitive to hosting environments.
 
-## Future Improvements
-- Add sample anonymized input data
-- Separate medical disclaimers from demo logic
-- Add tests for prediction pipelines
+## Recommended Deployment
+Streamlit Community Cloud is the best first option because this is a lightweight Streamlit demo. Hugging Face Spaces with Streamlit is also acceptable if Streamlit Cloud dependency resolution fails.
 
 ## Author
 Ramadan Mohamed Hassan
+
+- GitHub: https://github.com/Rmadanmohamed
+- LinkedIn: https://www.linkedin.com/in/ramadan-mohamed-657686365
+- Portfolio: https://ramadan-ai-portfolio.vercel.app

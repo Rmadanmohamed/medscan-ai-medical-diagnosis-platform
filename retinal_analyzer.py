@@ -8,8 +8,8 @@ from sklearn.metrics import accuracy_score, classification_report
 
 class RetinalAnalyzer:
     """
-    نموذج تحليل شبكية العين لكشف أمراض القلب والكلى
-    دقة 96% في التشخيص من فحص العين فقط
+    Educational retinal analysis prototype.
+    No independently verified clinical accuracy is claimed.
     """
 
     def __init__(self):
