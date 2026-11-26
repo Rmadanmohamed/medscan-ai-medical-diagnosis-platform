@@ -38,67 +38,52 @@ class MedicalImageAnalyzer:
         return model
 
     def preprocess_image(self, image_path):
-        """معالجة الصورة الطبية قبل التحليل"""
-        try:
-            image = cv2.imread(image_path)
-            if image is None:
-                raise ValueError(f"Could not read image from {image_path}")
-                
-            image = cv2.resize(image, (224, 224))
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            # استخراج الميزات البسيطة من الصورة
-            image_flattened = image.flatten() / 255.0
-            
-            # تطبيع البيانات
-            if self.model is not None and hasattr(self, 'scaler_fitted') and self.scaler_fitted:
-                image_scaled = self.scaler.transform([image_flattened])
-            else:
-                # في حالة عدم تدريب النموذج بعد، نستخدم البيانات كما هي
-                image_scaled = np.array([image_flattened])
-                
-            return image_scaled
-        except Exception as e:
-            print(f"Error preprocessing image: {e}")
-            # إرجاع مصفوفة صفرية في حالة الخطأ
-            return np.zeros((1, self.input_size))
+        """Read an image or fail explicitly; never infer from a fabricated zero array."""
+        image = cv2.imread(str(image_path))
+        if image is None:
+            raise ValueError("Could not read image")
+        image = cv2.cvtColor(cv2.resize(image, (224, 224)), cv2.COLOR_BGR2RGB)
+        features = np.asarray(image, dtype=np.float32).reshape(1, -1) / 255.0
+        return self.scaler.transform(features) if getattr(self, 'scaler_fitted', False) else features
+
+    def _label(self, value):
+        if isinstance(value, (int, np.integer)) and 0 <= int(value) < len(self.disease_labels):
+            return self.disease_labels[int(value)]
+        if isinstance(value, str) and value in self.disease_labels:
+            return value
+        raise ValueError("Unsupported class label")
 
     def predict_disease(self, image_path, confidence_threshold=0.85):
-        """تشخيص المرض من الصورة الطبية"""
-        if self.model is None:
-            return {
-                'disease': 'غير محدد',
-                'confidence': 0.0,
-                'reliable': False,
-                'all_probabilities': {label: 0.0 for label in self.disease_labels}
-            }
-            
-        processed_image = self.preprocess_image(image_path)
-        
-        # الحصول على احتمالات التصنيف
-        probabilities = self.model.predict_proba(processed_image)[0]
-        predicted_class = np.argmax(probabilities)
-        max_confidence = probabilities[predicted_class]
-
-        result = {
-            'disease': self.disease_labels[predicted_class],
-            'confidence': float(max_confidence),
-            'reliable': max_confidence > confidence_threshold,
-            'all_probabilities': {
-                self.disease_labels[i]: float(probabilities[i]) 
-                for i in range(len(self.disease_labels))
-            }
+        """Return educational model scores only after successful training."""
+        from sklearn.utils.validation import check_is_fitted
+        if self.model is None or not getattr(self, 'scaler_fitted', False):
+            raise RuntimeError("A trained model and fitted preprocessing are required")
+        check_is_fitted(self.model)
+        probabilities = self.model.predict_proba(self.preprocess_image(image_path))[0]
+        labels = [self._label(label) for label in self.model.classes_]
+        if len(labels) != len(probabilities) or not np.isfinite(probabilities).all():
+            raise ValueError("Invalid classifier output")
+        predicted = int(np.argmax(probabilities))
+        return {
+            'disease': labels[predicted],
+            'confidence': float(probabilities[predicted]),
+            # Model confidence is not clinical reliability.
+            'reliable': False,
+            'all_probabilities': dict(zip(labels, map(float, probabilities))),
+            'disclaimer': 'Educational classifier output; not a diagnosis.'
         }
-
-        return result
 
     def train_model(self, X_train, y_train, X_val=None, y_val=None):
         """تدريب النموذج على البيانات الطبية"""
         # تطبيع البيانات
         X_train_scaled = self.scaler.fit_transform(X_train)
-        self.scaler_fitted = True
-        
-        # تدريب النموذج
+        if self.model is None:
+            self.build_model()
+        self.scaler_fitted = False
+        for label in np.unique(y_train):
+            self._label(label)
         self.model.fit(X_train_scaled, y_train)
+        self.scaler_fitted = True
         
         # تقييم النموذج إذا كانت بيانات التحقق متوفرة
         if X_val is not None and y_val is not None:
@@ -121,19 +106,12 @@ class MedicalImageAnalyzer:
         accuracy = accuracy_score(y_test, y_pred)
         
         # تقرير التصنيف
-        report = classification_report(y_test, y_pred, target_names=self.disease_labels, output_dict=True)
+        report = classification_report(y_test, y_pred, labels=self.model.classes_, target_names=[self._label(label) for label in self.model.classes_], output_dict=True, zero_division=0)
         
         return {
             'accuracy': accuracy,
              'classification_report': report
          }
 
-# مثال على الاستخدام
 if __name__ == "__main__":
-    analyzer = MedicalImageAnalyzer()
-    model = analyzer.build_model()
-
-    # تشخيص صورة طبية
-    result = analyzer.predict_disease('medical_scan.jpg')
-    print(f"التشخيص: {result['disease']}")
-    print(f"مستوى الثقة: {result['confidence']:.2%}")
+    print("Supply authorized labeled training data and a non-sensitive sample image before running this educational classifier.")

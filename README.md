@@ -1,5 +1,7 @@
 # MedScan AI Medical Diagnosis Platform
 
+> **Remediation branch:** Research classifiers now reject missing images and untrained models, map probabilities through the trained class order, reuse retinal scaling at inference and suppress unsupported clinical prognosis. The Streamlit UI remains a demonstration. Run `python -m unittest discover -s tests -v` for synthetic regression checks; no original medical dataset or validated model is supplied. No clinical accuracy is claimed.
+
 ## Overview and problem statement
 
 MedScan AI is a Streamlit educational prototype for demonstrating how medical-image, retinal-image and tabular screening interfaces can be organized in one application. It separates a safe demonstration entry point from experimental analyzer modules.
