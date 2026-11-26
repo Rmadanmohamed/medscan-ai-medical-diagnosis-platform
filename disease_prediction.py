@@ -77,11 +77,14 @@ class DiseasePredictionSystem:
 
     def train_models(self, data, target_columns):
         """تدريب جميع نماذج التنبؤ"""
+        self.scalers = {}
         X = self.prepare_health_data(data)
 
         for disease, model in self.models.items():
             if disease in target_columns:
                 y = data[disease]
+                if set(y.unique()) != {0, 1}:
+                    raise ValueError(f'{disease} requires binary labels 0 and 1')
 
                 # تقسيم البيانات
                 X_train, X_test, y_train, y_test = train_test_split(
@@ -110,6 +113,10 @@ class DiseasePredictionSystem:
         predictions = {}
 
         # تحضير بيانات المريض
+        if not self.scalers:
+            raise RuntimeError('No trained disease classifiers are available')
+        if len(patient_data) != 1:
+            raise ValueError('Provide exactly one record for prediction')
         patient_features = self.prepare_health_data(patient_data)
 
         for disease, model in self.models.items():
@@ -118,13 +125,14 @@ class DiseasePredictionSystem:
                 scaled_data = self.scalers[disease].transform(patient_features)
 
                 # التنبؤ
-                risk_probability = model.predict_proba(scaled_data)[0][1]
+                risk_probability = model.predict_proba(scaled_data)[0][list(model.classes_).index(1)]
 
                 predictions[disease] = {
                     'risk_probability': float(risk_probability),
-                    'risk_category': self.categorize_risk(risk_probability),
-                    'time_to_onset': self.estimate_time_to_onset(disease, risk_probability),
-                    'prevention_tips': self.get_prevention_tips(disease, risk_probability)
+                    'risk_category': 'Research score only',
+                    'time_to_onset': None,
+                    'prevention_tips': [],
+                    'disclaimer': 'Unvalidated educational score, not a diagnosis or prognosis.'
                 }
 
         return predictions
@@ -143,20 +151,8 @@ class DiseasePredictionSystem:
             return "خطر منخفض جداً"
 
     def estimate_time_to_onset(self, disease, probability):
-        """تقدير الوقت المتوقع لظهور المرض"""
-        time_estimates = {
-            'heart_disease': {0.8: "6-12 شهر", 0.6: "1-2 سنة", 0.4: "2-5 سنوات"},
-            'diabetes': {0.8: "1-2 سنة", 0.6: "2-4 سنوات", 0.4: "4-8 سنوات"},
-            'cancer': {0.8: "6 أشهر - 2 سنة", 0.6: "2-5 سنوات", 0.4: "5-10 سنوات"},
-            'kidney_disease': {0.8: "1-3 سنوات", 0.6: "3-6 سنوات", 0.4: "6-12 سنة"}
-        }
-
-        estimates = time_estimates.get(disease, {})
-        for threshold in sorted(estimates.keys(), reverse=True):
-            if probability >= threshold:
-                return estimates[threshold]
-
-        return "أكثر من 10 سنوات"
+        """The classifiers are not survival models and cannot estimate onset."""
+        return None
 
     def get_prevention_tips(self, disease, probability):
         """تقديم نصائح الوقاية المخصصة"""
@@ -189,24 +185,5 @@ class DiseasePredictionSystem:
 
         return tips.get(disease, ["اتباع نمط حياة صحي"])
 
-# مثال على الاستخدام
 if __name__ == "__main__":
-    predictor = DiseasePredictionSystem()
-    models = predictor.build_prediction_models()
-
-    # مثال على بيانات مريض
-    patient_data = pd.DataFrame({
-        'age': [45], 'gender': [1], 'bmi': [28.5],
-        'blood_pressure_systolic': [140], 'blood_pressure_diastolic': [90],
-        'heart_rate': [85], 'cholesterol': [220], 'glucose_level': [105],
-        # ... باقي البيانات
-    })
-
-    # التنبؤ بالمخاطر
-    risks = predictor.predict_disease_risk(patient_data)
-
-    for disease, info in risks.items():
-        print(f"{disease}: {info['risk_category']} ({info['risk_probability']:.2%})")
-        print(f"الوقت المتوقع: {info['time_to_onset']}")
-        print("نصائح الوقاية:", ", ".join(info['prevention_tips']))
-        print("-" * 50)
+    print("Supply authorized labeled health data to train the educational classifiers before prediction.")
