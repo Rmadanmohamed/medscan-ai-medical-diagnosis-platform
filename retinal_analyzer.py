@@ -42,51 +42,30 @@ class RetinalAnalyzer:
         return models
 
     def analyze_retina(self, eye_image_path):
-        """تحليل صورة شبكية العين لكشف الأمراض"""
-        if self.model is None:
-            return {disease: {
-                'probability': 0.0,
-                'risk_level': 'غير محدد',
-                'recommended_action': 'يرجى بناء النموذج أولاً'
-            } for disease in self.diseases}
-            
-        try:
-            # معالجة صورة العين
-            image = cv2.imread(eye_image_path)
-            if image is None:
-                raise ValueError(f"Could not read image from {eye_image_path}")
-                
-            image = cv2.resize(image, (224, 224))
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            
-            # استخراج الميزات من الصورة
-            features = self.extract_features(image)
-            
-            # التنبؤ بالأمراض
-            results = {}
-            for disease, model in self.model.items():
-                # في حالة عدم تدريب النموذج، نستخدم قيم افتراضية
-                if not hasattr(model, 'predict_proba'):
-                    probability = 0.5  # قيمة افتراضية
-                else:
-                    # الحصول على احتمالية الإصابة بالمرض
-                    probability = model.predict_proba([features])[0][1]
-                    
-                results[disease] = {
-                    'probability': float(probability),
-                    'risk_level': self.get_risk_level(probability),
-                    'recommended_action': self.get_recommendation(disease, probability)
-                }
-            
-            return results
-        except Exception as e:
-            print(f"Error analyzing retina: {e}")
-            return {disease: {
-                'probability': 0.0,
-                'risk_level': 'خطأ',
-                'recommended_action': f'حدث خطأ أثناء التحليل: {str(e)}'
-            } for disease in self.diseases}
-            
+        """Educational scores only; reject missing or untrained models."""
+        from sklearn.utils.validation import check_is_fitted
+        if self.model is None or not getattr(self, 'trained_diseases', set()):
+            raise RuntimeError("No trained retinal classifiers are available")
+        image = cv2.imread(str(eye_image_path))
+        if image is None:
+            raise ValueError("Could not read retinal image")
+        image = cv2.cvtColor(cv2.resize(image, (224, 224)), cv2.COLOR_BGR2RGB)
+        features = self.scaler.transform([self.extract_features(image)])
+        results = {}
+        for disease, model in self.model.items():
+            if disease not in self.trained_diseases:
+                results[disease] = {'probability': None, 'risk_level': 'Unavailable', 'recommended_action': 'Model not trained'}
+                continue
+            check_is_fitted(model)
+            positive = list(model.classes_).index(1)
+            probability = float(model.predict_proba(features)[0][positive])
+            results[disease] = {
+                'probability': probability,
+                'risk_level': 'Research score only',
+                'recommended_action': 'Not a clinical assessment; consult a qualified clinician.'
+            }
+        return results
+
     def extract_features(self, image):
         """استخراج الميزات من صورة شبكية العين"""
         # تحويل الصورة إلى مصفوفة مسطحة
@@ -147,10 +126,10 @@ class RetinalAnalyzer:
         
         results = {}
         for disease in self.diseases:
-            if disease in y_test_dict:
+            if disease in y_test_dict and disease in getattr(self, 'trained_diseases', set()):
                 # التنبؤ باستخدام النموذج
                 y_pred = self.model[disease].predict(X_test_scaled)
-                y_prob = self.model[disease].predict_proba(X_test_scaled)[:, 1]
+                y_prob = self.model[disease].predict_proba(X_test_scaled)[:, list(self.model[disease].classes_).index(1)]
                 
                 # حساب مقاييس الأداء
                 accuracy = accuracy_score(y_test_dict[disease], y_pred)
@@ -187,13 +166,17 @@ class RetinalAnalyzer:
             self.build_retinal_model()
             
         # تطبيع البيانات
+        self.trained_diseases = set()
         X_train_scaled = self.scaler.fit_transform(X_train)
         
         results = {}
         for disease in self.diseases:
             if disease in y_train_dict:
                 # تدريب النموذج لهذا المرض
+                if set(np.unique(y_train_dict[disease])) != {0, 1}:
+                    raise ValueError('Expected binary labels 0 and 1')
                 self.model[disease].fit(X_train_scaled, y_train_dict[disease])
+                self.trained_diseases.add(disease)
                 
                 # تقييم النموذج إذا كانت بيانات التحقق متوفرة
                 if X_val is not None and y_val_dict is not None and disease in y_val_dict:
@@ -211,15 +194,5 @@ class RetinalAnalyzer:
                 
         return results
 
-# مثال على الاستخدام
 if __name__ == "__main__":
-    retinal_analyzer = RetinalAnalyzer()
-    model = retinal_analyzer.build_retinal_model()
-
-    # تحليل صورة شبكية العين
-    results = retinal_analyzer.analyze_retina('retinal_image.jpg')
-
-    for disease, info in results.items():
-        print(f"{disease}: {info['risk_level']} ({info['probability']:.2%})")
-        print(f"التوصية: {info['recommended_action']}")
-        print("-" * 50)
+    print("Supply authorized labeled retinal data and trained classifiers for this educational experiment.")
